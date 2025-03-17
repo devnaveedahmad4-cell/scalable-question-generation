@@ -17,6 +17,13 @@ def load_docs(data_dir: Path, stream_pdf: bool = True):
                 print(f"Loaded PDF (streaming): {file.name} with {len(reader.pages)} pages")
 
         elif file.suffix.lower() == ".txt":
-            pass
+            text = ""
+            for page in reader:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+            documents.append(text)
+            
+            print(f"Loaded PDF (full): {file.name} ({len(text)} chars)")
         else:
             print(f"Skipped unsupported file type: {file.name}")
