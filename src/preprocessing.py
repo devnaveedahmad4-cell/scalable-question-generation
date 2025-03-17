@@ -1,29 +1,26 @@
-from PyPDF2 import PdfReader
+import fitz
 from pathlib import Path
+
 
 def load_docs(data_dir: Path, stream_pdf: bool = True):
     documents = list()
 
     for file in sorted(data_dir.iterdir()):
-        reader = PdfReader(file)
-
         if file.suffix.lower() == ".pdf":
-            if stream_pdf:
-                for i, page in enumerate(reader.pages):
-                    page_text = page.extract_text()
-                    if page_text and page_text.strip():
-                        documents.append(page_text)
-
-                print(f"Loaded PDF (streaming): {file.name} with {len(reader.pages)} pages")
-
-        elif file.suffix.lower() == ".txt":
+            doc = fitz.open(file)
             text = ""
-            for page in reader:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                text += page.get_text("text") + "\n"
             documents.append(text)
-
-            print(f"Loaded PDF (full): {file.name} ({len(text)} chars)")
+            print(f"✅ Loaded PDF: {file.name} ({len(doc)} pages)")
+        
+        elif file.suffix.lower() == ".txt":
+            text = file.read_text(encoding="utf-8", errors="ignore")
+            documents.append(text)
+            print(f"Loaded TXT: {file.name} ({len(text)} chars)")
+        
         else:
-            print(f"Skipped unsupported file type: {file.name}")
+            print(f"Skipping unsupported file: {file.name}")
+
+    return documents
